@@ -20,12 +20,14 @@
     .table tbody tr.small { background:#e9f9ee; }
     .table tbody tr.medium { background:#fff9e6; }
     .table tbody tr.large { background:#fdecea; }
+    .media-thumb { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6; background: #f8f9fa; }
+    .media-cell { min-width: 130px; }
   </style>
 </head>
 <body>
   <div class="hero">
     <h1>Detection Analytics</h1>
-    <p>Garbage classification & map (Muzaffarabad)</p>
+    <p>Garbage classification and map for Muzaffarabad</p>
   </div>
 
   <div class="container">
@@ -53,7 +55,7 @@
 
     <div class="row">
       <div class="col-lg-7 mb-4">
-        <h4>Garbage Detection Map — {{ city_name }}</h4>
+        <h4>Garbage Detection Map - {{ city_name }}</h4>
         <div id="map"></div>
       </div>
 
@@ -70,11 +72,12 @@
 
     <h4 class="mt-3">Detection Records</h4>
     <div class="table-responsive">
-      <table class="table">
+      <table class="table align-middle">
         <thead>
           <tr>
-            <th>Filename</th>
+            <th>Media</th>
             <th>Detected Class</th>
+            <th>Annotated Result</th>
             <th>Timestamp</th>
             <th>Location</th>
             <th>In-Charge</th>
@@ -82,32 +85,56 @@
         </thead>
         <tbody>
           {% for row in rows %}
-            {% set det = (row[2] or '').lower() %}
-            {% if 'small' in det %}
-              {% set rclass='small' %}
+            {% set filename = row[1] %}
+            {% set annotated = row[2] %}
+            {% set det = (row[3] or '').lower() %}
+            {% set media_type = row[7] or 'image' %}
+            {% if 'large' in det %}
+              {% set rclass='large' %}
             {% elif 'medium' in det %}
               {% set rclass='medium' %}
-            {% elif 'large' in det %}
-              {% set rclass='large' %}
+            {% elif 'small' in det %}
+              {% set rclass='small' %}
             {% else %}
               {% set rclass='' %}
             {% endif %}
           <tr class="{{ rclass }}">
-            <td style="max-width:350px; word-break:break-all">{{ row[1] }}</td>
+            <td class="media-cell">
+              {% if media_type == 'video' %}
+                <a href="{{ url_for('uploaded_file', filename=filename) }}" target="_blank" rel="noopener">Original video</a>
+              {% else %}
+                <a href="{{ url_for('uploaded_file', filename=filename) }}" target="_blank" rel="noopener">
+                  <img class="media-thumb" src="{{ url_for('uploaded_file', filename=filename) }}" alt="Original upload">
+                </a>
+              {% endif %}
+              <div class="small text-muted mt-1" style="word-break:break-all">{{ filename }}</div>
+            </td>
             <td>
               {% if 'small' in det %}
                 <span class="badge-small">Small</span>
-              {% elif 'medium' in det %}
+              {% endif %}
+              {% if 'medium' in det %}
                 <span class="badge-medium">Medium</span>
-              {% elif 'large' in det %}
+              {% endif %}
+              {% if 'large' in det %}
                 <span class="badge-large">Large</span>
-              {% else %}
-                <span class="badge bg-secondary">Unknown</span>
+              {% endif %}
+              {% if 'small' not in det and 'medium' not in det and 'large' not in det %}
+                <span class="badge bg-secondary">{{ row[3] or "Unknown" }}</span>
               {% endif %}
             </td>
-            <td>{{ row[3] }}</td>
-            <td>{{ row[4] or "None" }}</td>
+            <td>
+              {% if annotated %}
+                <a href="{{ url_for('detection_file', filename=annotated) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success">
+                  Open result
+                </a>
+              {% else %}
+                <span class="text-muted">Not available</span>
+              {% endif %}
+            </td>
+            <td>{{ row[4] }}</td>
             <td>{{ row[5] or "None" }}</td>
+            <td>{{ row[6] or "None" }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -124,13 +151,21 @@
     const mapData = {{ map_data_json | safe }};
     const cityCoords = [{{ city_coords[0] }}, {{ city_coords[1] }}];
 
-    // Init map centered on Muzaffarabad
-    var map = L.map('map').setView(cityCoords, 12);
+    const map = L.map('map').setView(cityCoords, 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Add markers
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
     mapData.forEach(item => {
       const lat = parseFloat(item.lat) || cityCoords[0];
       const lon = parseFloat(item.lon) || cityCoords[1];
@@ -145,15 +180,18 @@
         fillOpacity: 0.9
       }).addTo(map);
 
-      const popupHtml = `<strong>${item.filename}</strong><br/>
-                         Detected: ${item.detected}<br/>
-                         Time: ${item.timestamp}<br/>
-                         Location: ${item.location || 'None'}<br/>
-                         In-Charge: ${item.incharge || 'None'}`;
+      const resultLink = item.annotated
+        ? `<br/><a href="/detections/${encodeURI(item.annotated)}" target="_blank" rel="noopener">Open annotated result</a>`
+        : '';
+      const popupHtml = `<strong>${escapeHtml(item.filename)}</strong><br/>
+                         Type: ${escapeHtml(item.media_type)}<br/>
+                         Detected: ${escapeHtml(item.detected)}<br/>
+                         Time: ${escapeHtml(item.timestamp)}<br/>
+                         Location: ${escapeHtml(item.location || 'None')}<br/>
+                         In-Charge: ${escapeHtml(item.incharge || 'None')}${resultLink}`;
       marker.bindPopup(popupHtml);
     });
 
-    // Chart.js counts
     const ctx = document.getElementById('countsChart').getContext('2d');
     const data = {
       labels: ['Small Garbage', 'Medium Garbage', 'Large Garbage'],
@@ -164,7 +202,6 @@
       }]
     };
     new Chart(ctx, { type: 'bar', data: data, options: { responsive: true } });
-
   </script>
 </body>
 </html>

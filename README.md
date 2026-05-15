@@ -1,89 +1,78 @@
-# 🗑️ Smart Garbage Detection & Classification using YOLOv11
-A Flask-based web application that detects and classifies garbage (Small, Medium, Large) using a fine-tuned YOLOv11 model. The system stores detection results in a local SQLite database and visualizes detections with analytics and geolocation mapping.
+# Smart Garbage Detection & Classification using YOLO
 
----
+A Flask-based web application that detects and classifies garbage as small, medium, or large using a custom YOLO model. The system stores detection results in SQLite and visualizes records with analytics, annotated outputs, and geolocation mapping.
 
-## 🎯 Project Overview
-This project automates garbage detection in urban environments using computer vision.  
-Users can upload images, and the system:
+## Project Overview
 
-- Runs detection using a custom-trained **YOLOv11** model (`best.pt`)
-- Classifies trash into **Small, Medium, and Large**
-- Stores each detection in a **SQLite database**
-- Saves uploaded images locally
-- Displays analytical dashboards including:
-  - Count of each trash type
-  - List of detections with timestamps
-  - Map visualization (using fixed or user-entered location)
+Users can upload images or supported videos. The system:
 
-This makes the system suitable for:
-- Smart city applications  
-- Waste management monitoring  
-- Environmental cleanliness analysis  
+- Runs detection using `best.pt` or the path provided by `MODEL_PATH`
+- Classifies trash into small, medium, and large categories
+- Saves original uploads in `uploads/`
+- Saves annotated YOLO outputs in `runs/`
+- Stores each detection in a local SQLite database
+- Displays analytics with counts, records, result links, and a map
 
----
+This makes the system suitable for smart city waste monitoring, cleanliness analysis, and field inspection workflows.
 
-## 📂 Project Structure
+## Project Structure
 
+```text
 project/
-│── app.py # Main Flask application
-│── best.pt # YOLOv11 trained model (not included in repo)
-│── database.db # SQLite DB (auto-created)
-│── templates/
-│ ├── index.html
-│ ├── analytics.html
-│── uploads/ # User-uploaded images
-│── runs/ # YOLO detection outputs (optional)
-│── static/ # CSS/JS/Assets (if any)
-│── README.md
-│── .gitignore
+|-- app.py                 # Main Flask application
+|-- best.pt                # YOLO trained model
+|-- database.db            # SQLite DB, auto-created/migrated
+|-- templates/
+|   |-- index.html
+|   `-- analytics.html
+|-- uploads/               # User-uploaded media
+|-- runs/                  # Annotated YOLO outputs
+|-- static/                # Optional CSS/assets
+|-- requirements.txt
+`-- README.md
+```
 
+## Features
 
----
+- Garbage detection for small, medium, and large waste
+- Secure image validation with Pillow
+- Supported video uploads: `mp4`, `avi`, `mov`, `mkv`, `webm`
+- Configurable upload limit through `MAX_UPLOAD_MB`
+- Annotated detection result links in analytics
+- Multi-class counting, so one upload can increment multiple categories
+- SQLite logging with filename, annotated filename, media type, classes, timestamp, location, and in-charge
+- Leaflet map centered on Muzaffarabad by default
 
-## 🚀 Features
+## Configuration
 
-### ✔ Garbage Detection  
-Detects **small, medium, and large** trash using YOLOv11.
+Environment variables:
 
-### ✔ Secure File Upload  
-Validates & processes images safely using Pillow.
-
-### ✔ Location Tagging  
-If no location is entered, defaults to:  
-**Muzaffarabad, Azad Kashmir (34.3700, 73.4711)**
-
-### ✔ SQLite Database Logging  
-Stores:
-- File name  
-- Detected classes  
-- Timestamp  
-- Location  
-- Incharge / employee name  
-
-### ✔ Analytical Dashboard  
-Includes:
-- Trash quantity chart  
-- Detection table  
-- Map with geo-points  
-
----
-
-## 🧠 Tech Stack
-
-| Component | Technology |
-|----------|------------|
-| Backend | Flask (Python) |
-| Detection Model | YOLOv11 (Ultralytics) |
-| Database | SQLite |
-| Frontend | HTML, CSS, JS, Leaflet Maps |
-| Image Processing | Pillow |
-
----
-
-## 🔧 Installation & Setup
-
-### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/yourusername/smart-garbage-detection.git
-cd smart-garbage-detection
+MODEL_PATH=best.pt
+UPLOAD_FOLDER=uploads
+DETECTION_FOLDER=runs
+DB_NAME=database.db
+MAX_UPLOAD_MB=100
+FLASK_DEBUG=0
+```
+
+Set `FLASK_DEBUG=1` only during local development.
+
+## Installation & Setup
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:5000
+```
+
+## Notes
+
+- Internet access is required for the current CDN-hosted frontend libraries.
+- If `best.pt` is missing or cannot load, uploads still log with `model_missing`.
+- Enter location as `lat,lon` for precise marker placement. Otherwise, the app falls back to Muzaffarabad, Azad Kashmir.

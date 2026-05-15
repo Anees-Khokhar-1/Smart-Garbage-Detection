@@ -3,29 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Garbage Detection — Upload</title>
+  <title>Garbage Detection - Upload</title>
 
-  <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Font Awesome for icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
   <style>
     :root{
       --primary:#0b6b3f;
       --accent:#17c3b2;
-      --card-bg: #ffffff;
       --muted:#6c757d;
-      --glass: rgba(255,255,255,0.6);
     }
-    html,body { height: 100%; font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,#ecfaf5 0%, #f6fbfb 100%); color:#08311f; }
+    html,body { height: 100%; font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial; background: linear-gradient(180deg,#ecfaf5 0%, #f6fbfb 100%); color:#08311f; }
     .nav-brand { font-weight:700; letter-spacing:0.2px; }
     .hero { background: linear-gradient(90deg, rgba(9,99,57,0.98), rgba(6,142,107,0.95)); color: white; padding: 48px 0; border-radius: 0 0 24px 24px; box-shadow: 0 8px 40px rgba(3,59,34,0.12); }
-    .hero .subtitle { opacity: 0.95; }
+    .hero .small-muted { color: rgba(255,255,255,0.82); }
     .upload-card { margin-top: -40px; position: relative; z-index: 20; }
     .dropzone {
       border: 2px dashed rgba(11,107,63,0.18);
@@ -40,15 +33,17 @@
     .thumb {
       max-width: 148px; max-height: 120px; border-radius: 8px; object-fit:cover; border:1px solid #e9ecef;
     }
+    .video-thumb {
+      width: 148px; height: 92px; border-radius: 8px; border:1px solid #e9ecef; display:flex; align-items:center; justify-content:center; background:#eef7f2; color:var(--primary);
+    }
     .btn-upload {
       background: linear-gradient(90deg,var(--primary), #0f8a57);
       color:white; font-weight:600;
     }
     .small-muted { color:var(--muted); font-size:0.92rem; }
-    .features .feature-card { border-radius: 12px; border:1px solid rgba(3,59,34,0.06); background: rgba(255,255,255,0.7); }
+    .feature-card { border-radius: 12px; border:1px solid rgba(3,59,34,0.06); background: rgba(255,255,255,0.7); }
     footer { padding: 28px 0; color: #465a4f; font-size: .95rem; }
 
-    /* responsive */
     @media (max-width: 768px){
       .hero { padding: 28px 0; text-align:center; }
       .upload-card { margin-top: -28px; }
@@ -57,7 +52,6 @@
 </head>
 <body>
 
-  <!-- NAV / HERO -->
   <header class="hero">
     <div class="container">
       <div class="d-flex align-items-center justify-content-between">
@@ -67,7 +61,7 @@
           </div>
           <div>
             <div class="nav-brand h4 mb-0">Garbage Detection</div>
-            <div class="subtitle small-muted">Smart classification & analytics for small, medium and large waste</div>
+            <div class="small-muted">Smart classification and analytics for small, medium, and large waste</div>
           </div>
         </div>
 
@@ -78,21 +72,24 @@
 
       <div class="mt-4 row">
         <div class="col-md-8">
-          <h1 class="mb-2" style="font-weight:700">Upload images — detect & monitor garbage sizes</h1>
-          <p class="small-muted">Drag & drop images or select files. Supported: JPG | JPEG | PNG | JFIF | WEBP | TIFF | BMP | GIF.</p>
+          <h1 class="mb-2" style="font-weight:700">Upload media for detection and monitoring</h1>
+          <p class="small-muted">
+            Supported images: {{ image_extensions | join(', ') }}.
+            Supported videos: {{ video_extensions | join(', ') }}.
+            Max size: {{ max_upload_mb }} MB.
+          </p>
         </div>
         <div class="col-md-4 text-md-end d-none d-md-block">
           <div class="p-3" style="background:rgba(255,255,255,0.06); border-radius:10px; display:inline-block;">
             <div style="font-size:14px; color:rgba(255,255,255,0.9)">City</div>
             <div style="font-weight:700; font-size:18px">Muzaffarabad, Azad Kashmir</div>
-            <div class="small-muted mt-1">Center map to this city</div>
+            <div class="small-muted mt-1">Default map center</div>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- UPLOAD CARD -->
   <main class="container upload-card">
     <div class="card shadow-sm p-4">
       <div class="row g-4">
@@ -100,10 +97,10 @@
           <form id="uploadForm" method="post" action="/upload" enctype="multipart/form-data" novalidate>
             <div id="dropzone" class="dropzone mb-3">
               <div class="icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-              <div class="mt-2"><strong>Drag & drop image here</strong></div>
+              <div class="mt-2"><strong>Drag and drop an image or video here</strong></div>
               <div class="small-muted mt-1">or <button type="button" id="browseBtn" class="btn btn-link p-0">browse files</button> from your device</div>
 
-              <input id="fileInput" type="file" name="file" accept="image/*" style="display:none" required>
+              <input id="fileInput" type="file" name="file" accept="image/*,video/*" style="display:none" required>
               <div id="preview" class="mt-3 d-flex gap-3 justify-content-center align-items-center"></div>
             </div>
 
@@ -120,7 +117,7 @@
               </div>
             </div>
 
-            <div class="d-flex align-items-center gap-3 mt-4">
+            <div class="d-flex align-items-center gap-3 mt-4 flex-wrap">
               <button id="submitBtn" class="btn btn-upload btn-lg">
                 <i class="fa-solid fa-upload me-2"></i> Upload & Detect
               </button>
@@ -137,22 +134,21 @@
           </form>
         </div>
 
-        <!-- Right column: features & quick legend -->
         <div class="col-lg-4">
-          <div class="features d-grid gap-3">
+          <div class="d-grid gap-3">
             <div class="feature-card p-3">
-              <h6><i class="fa-solid fa-shield-halved me-2" style="color:var(--primary)"></i> Robust detection</h6>
-              <p class="small-muted mb-0">Model classifies small / medium / large waste and stores analytics in a local DB for reporting.</p>
+              <h6><i class="fa-solid fa-shield-halved me-2" style="color:var(--primary)"></i> Validated uploads</h6>
+              <p class="small-muted mb-0">Images are verified before saving, and videos are checked against supported extensions.</p>
             </div>
 
             <div class="feature-card p-3">
-              <h6><i class="fa-solid fa-layer-group me-2" style="color:var(--primary)"></i> Color-coded results</h6>
-              <p class="mb-2 small-muted">Small → <span class="badge bg-success">Green</span>, Medium → <span class="badge bg-warning text-dark">Yellow</span>, Large → <span class="badge bg-danger">Red</span></p>
+              <h6><i class="fa-solid fa-layer-group me-2" style="color:var(--primary)"></i> Annotated results</h6>
+              <p class="mb-2 small-muted">YOLO outputs are saved and linked from the analytics dashboard.</p>
             </div>
 
             <div class="feature-card p-3">
               <h6><i class="fa-solid fa-map-location-dot me-2" style="color:var(--primary)"></i> Map center</h6>
-              <p class="small-muted mb-0">Map is centered to Muzaffarabad. Enter exact lat,lon in location to place markers precisely.</p>
+              <p class="small-muted mb-0">Enter exact lat,lon coordinates to place a marker precisely.</p>
             </div>
           </div>
         </div>
@@ -163,16 +159,14 @@
 
   <footer class="container mt-4">
     <div class="d-flex justify-content-between align-items-center py-3">
-      <div class="small-muted">© <strong>Garbage Detection</strong> — FYP Project</div>
-      <div class="small-muted">Built with <i class="fa-solid fa-heart" style="color:#e25555"></i> & Python / Flask</div>
+      <div class="small-muted"><strong>Garbage Detection</strong> - FYP Project</div>
+      <div class="small-muted">Built with Python and Flask</div>
     </div>
   </footer>
 
-  <!-- Bootstrap bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    // Elements
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const browseBtn = document.getElementById('browseBtn');
@@ -183,12 +177,12 @@
     const progressBar = document.getElementById('progressBar');
     const statusText = document.getElementById('statusText');
 
-    // Allowed types (client-side)
-    const allowed = ['image/jpeg','image/png','image/webp','image/gif','image/bmp','image/tiff','image/jfif'];
+    const allowedImages = ['image/jpeg','image/png','image/webp','image/gif','image/bmp','image/tiff'];
+    const allowedVideos = ['video/mp4','video/x-msvideo','video/quicktime','video/x-matroska','video/webm'];
+    const allowedExtensions = {{ allowed_extensions | tojson }};
 
     browseBtn.addEventListener('click', () => fileInput.click());
 
-    // drag events
     ['dragenter','dragover'].forEach(evt => {
       dropzone.addEventListener(evt, e => {
         e.preventDefault(); e.stopPropagation();
@@ -205,7 +199,7 @@
     dropzone.addEventListener('drop', (e) => {
       const dt = e.dataTransfer;
       if (dt && dt.files && dt.files.length) {
-        fileInput.files = dt.files; // set file input for form submittal
+        fileInput.files = dt.files;
         showPreview(dt.files[0]);
       }
     });
@@ -216,40 +210,51 @@
       }
     });
 
+    function extensionAllowed(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      return allowedExtensions.includes(ext);
+    }
+
     function showPreview(file) {
-      preview.innerHTML = ''; // clear
-      if (!allowed.includes(file.type)) {
+      preview.innerHTML = '';
+      if (!extensionAllowed(file)) {
         preview.innerHTML = '<div class="small-muted">Unsupported file type</div>';
         return;
       }
-      const img = document.createElement('img');
-      img.className = 'thumb';
-      img.alt = 'Preview';
-      const reader = new FileReader();
-      reader.onload = (ev) => { img.src = ev.target.result; };
-      reader.readAsDataURL(file);
-      preview.appendChild(img);
 
-      // show filename
+      if (allowedImages.includes(file.type)) {
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.alt = 'Preview';
+        const reader = new FileReader();
+        reader.onload = (ev) => { img.src = ev.target.result; };
+        reader.readAsDataURL(file);
+        preview.appendChild(img);
+      } else {
+        const box = document.createElement('div');
+        box.className = 'video-thumb';
+        box.innerHTML = '<i class="fa-solid fa-film fa-2x"></i>';
+        preview.appendChild(box);
+      }
+
       const meta = document.createElement('div');
       meta.style.fontSize = '.9rem';
       meta.style.color = '#495057';
-      meta.style.maxWidth = '160px';
+      meta.style.maxWidth = '180px';
       meta.style.textAlign = 'left';
-      meta.innerHTML = `<div style="font-weight:600;margin-top:6px">${file.name}</div><div class="small-muted">${(file.size/1024|0)} KB</div>`;
+      meta.innerHTML = `<div style="font-weight:600;margin-top:6px;word-break:break-all">${file.name}</div><div class="small-muted">${Math.round(file.size/1024)} KB</div>`;
       preview.appendChild(meta);
     }
 
-    // Submit handler — show progress with XHR and redirect to analytics on success
     uploadForm.addEventListener('submit', function(e){
       e.preventDefault();
       const f = fileInput.files && fileInput.files[0];
       if (!f) {
-        statusText.innerText = 'Please choose an image first.';
+        statusText.innerText = 'Please choose a file first.';
         return;
       }
-      if (!allowed.includes(f.type)) {
-        statusText.innerText = 'Unsupported file type. Please pick an image.';
+      if (!extensionAllowed(f)) {
+        statusText.innerText = 'Unsupported file type.';
         return;
       }
 
@@ -260,8 +265,6 @@
       statusText.innerText = '';
 
       const fd = new FormData(uploadForm);
-
-      // XHR to show progress easily
       const xhr = new XMLHttpRequest();
       xhr.open('POST', uploadForm.action, true);
       xhr.upload.onprogress = function(e){
@@ -275,10 +278,9 @@
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa-solid fa-upload me-2"></i>Upload & Detect';
         if (xhr.status >= 200 && xhr.status < 400) {
-          // success — redirect to analytics
           window.location.href = '/analytics';
         } else {
-          statusText.innerText = 'Upload failed: ' + xhr.statusText;
+          statusText.innerText = 'Upload failed: ' + xhr.responseText;
         }
       };
       xhr.onerror = function(){
